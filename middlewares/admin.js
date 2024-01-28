@@ -1,21 +1,28 @@
-const {Admin} = require('../db/index');
+const { Admin } = require('../db/index');
+const sceret = require("../config");
+const jwt = require("jsonwebtoken");
 
-async function adminMiddleware(req,res,next){
-    const username = req.headers.username;
-    const password = req.headers.password;
+async function adminMiddleware(req, res, next) {
 
-    var value = await Admin.findOne({
-        username: username,
-        password: password
-    })
-   
-    if(value){
-        next()
-    }else{
-        res.status(403).json({
-            msg:'user not found'
+    const token = req.headers.authorization;
+    const words = token.split(" ");
+    const jwtToken = words[1]
+
+    try {
+        const decodedValue = jwt.verify(jwtToken, sceret);
+        if (decodedValue.username) {
+            next()
+        } else {
+            res.status(403).json({
+                msg: 'you are not authenticated'
+            })
+        }
+    } catch(e) {
+        req.json({
+            msg: "Incorrect Inputs"
         })
     }
+
 }
 
 module.exports = adminMiddleware;
